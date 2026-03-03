@@ -8,7 +8,12 @@ const rule: TextlintRuleModule<Options> = (context) => {
 
     return {
         [Syntax.Paragraph](node) {
-            const text = getSource(node);
+            // Neutralize sentence-ending punctuation inside inline code spans so
+            // sentence-splitter does not treat e.g. `!command` as a sentence boundary.
+            // Character-for-character replacement preserves all range/position offsets.
+            const text = getSource(node).replace(/`([^`]*)`/g, (_, content) =>
+                '`' + content.replace(/[.!?]/g, "x") + '`'
+            );
             const result = split(text);
 
             const sentences = result.filter(

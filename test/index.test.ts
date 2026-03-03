@@ -73,6 +73,9 @@ tester.run("idiomatic-lines", rule, {
 
         // Single character
         "A",
+
+        // Sentence with inline code containing a bang prefix (e.g. Slack command)
+        "To get our attention, post `!oncall ci-dev` in a thread with a link to your PR.",
     ],
     invalid: [
         // Two sentences on one line
