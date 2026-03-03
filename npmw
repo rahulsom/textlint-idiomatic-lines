@@ -1,0 +1,8 @@
+#!/bin/bash
+
+. .ntw.sh
+
+selectNode v24.14.0
+selectTool npm 11.11.0
+
+npm "$@"

@@ -1,0 +1,42 @@
+{
+  "name": "textlint-rule-idiomatic-lines",
+  "version": "1.0.0",
+  "description": "textlint rule that enforces one sentence per line and one line per sentence",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "test": "mocha",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "textlintrule"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "textlint": ">= 12.2.0"
+  },
+  "dependencies": {
+    "sentence-splitter": "^4.0.0"
+  },
+  "devDependencies": {
+    "@textlint/types": "^14.0.0",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^25.3.3",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "chai": "^6.2.2",
+    "eslint": "^10.0.2",
+    "mocha": "^10.0.0",
+    "textlint": "^14.0.0",
+    "textlint-tester": "^14.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
