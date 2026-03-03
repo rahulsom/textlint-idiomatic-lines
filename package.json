@@ -1,6 +1,6 @@
 {
   "name": "textlint-rule-idiomatic-lines",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "textlint rule that enforces one sentence per line and one line per sentence",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
