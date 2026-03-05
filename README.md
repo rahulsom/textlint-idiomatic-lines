@@ -1,5 +1,8 @@
 # textlint-rule-idiomatic-lines
 
+[![NPM Version](https://img.shields.io/npm/v/textlint-rule-idiomatic-lines?style=for-the-badge)](https://www.npmjs.com/package/textlint-rule-idiomatic-lines)
+[![GitHub commits since latest release](https://img.shields.io/github/commits-since/rahulsom/textlint-idiomatic-lines/latest?style=for-the-badge)](https://github.com/rahulsom/textlint-idiomatic-lines/releases/new)
+
 A [textlint](https://textlint.org/) rule that enforces **one sentence per line** and **one line per sentence**.
 
 This style, sometimes called [semantic linefeeds](https://rhodesmill.org/brandon/2012/one-sentence-per-line/), makes prose easier to diff, review, and rearrange in version control.
