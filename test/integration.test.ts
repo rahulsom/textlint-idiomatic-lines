@@ -121,6 +121,64 @@ describe("integration: lintFiles", () => {
     });
 });
 
+describe("integration: fixText", () => {
+    const linter = buildLinter();
+
+    it("fixes multiple sentences on one line by inserting newlines", async () => {
+        const result = await linter.fixText(
+            "First sentence. Second sentence.\n",
+            "test.md"
+        );
+        expect(result.output).to.equal("First sentence.\nSecond sentence.\n");
+    });
+
+    it("fixes a sentence spanning lines by joining with spaces", async () => {
+        const result = await linter.fixText(
+            "This is a sentence\nthat spans two lines.\n",
+            "test.md"
+        );
+        expect(result.output).to.equal(
+            "This is a sentence that spans two lines.\n"
+        );
+    });
+
+    it("fixes both violation types in the same paragraph", async () => {
+        const result = await linter.fixText(
+            "First. Second sentence\ncontinues here.\n",
+            "test.md"
+        );
+        expect(result.output).to.equal(
+            "First.\nSecond sentence continues here.\n"
+        );
+    });
+
+    it("fixes four sentences on one line", async () => {
+        const result = await linter.fixText(
+            "Stop now. Go home. Eat food. Sleep well.\n",
+            "test.md"
+        );
+        expect(result.output).to.equal(
+            "Stop now.\nGo home.\nEat food.\nSleep well.\n"
+        );
+    });
+
+    it("does not modify already-valid text", async () => {
+        const text = "First sentence.\nSecond sentence.\n";
+        const result = await linter.fixText(text, "test.md");
+        expect(result.output).to.equal(text);
+    });
+
+    it("handles emphasis spanning lines", async () => {
+        const result = await linter.fixText(
+            "This is **really\nimportant** stuff.\n",
+            "test.md"
+        );
+        expect(result.output).to.equal(
+            "This is **really important** stuff.\n"
+        );
+    });
+});
+
 describe("integration: lintText", () => {
     const linter = buildLinter();
 

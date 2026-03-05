@@ -3,15 +3,16 @@ import { split, SentenceSplitterSyntax } from "sentence-splitter";
 
 export type Options = Record<string, never>;
 
-const rule: TextlintRuleModule<Options> = (context) => {
-    const { Syntax, report, RuleError, locator, getSource } = context;
+const reporter: TextlintRuleModule<Options> = (context) => {
+    const { Syntax, report, RuleError, locator, getSource, fixer } = context;
 
     return {
         [Syntax.Paragraph](node) {
+            const originalText = getSource(node);
             // Neutralize sentence-ending punctuation inside inline code spans so
             // sentence-splitter does not treat e.g. `!command` as a sentence boundary.
             // Character-for-character replacement preserves all range/position offsets.
-            const text = getSource(node).replace(/`([^`]*)`/g, (_, content) =>
+            const text = originalText.replace(/`([^`]*)`/g, (_, content) =>
                 '`' + content.replace(/[.!?]/g, "x") + '`'
             );
             const result = split(text);
@@ -26,6 +27,10 @@ const rule: TextlintRuleModule<Options> = (context) => {
 
             for (const sentence of sentences) {
                 if (sentence.loc.start.line !== sentence.loc.end.line) {
+                    const sentenceText = originalText.slice(
+                        sentence.range[0],
+                        sentence.range[1]
+                    );
                     report(
                         node,
                         new RuleError(
@@ -35,6 +40,10 @@ const rule: TextlintRuleModule<Options> = (context) => {
                                     sentence.range[0],
                                     sentence.range[1],
                                 ]),
+                                fix: fixer.replaceTextRange(
+                                    [sentence.range[0], sentence.range[1]],
+                                    sentenceText.replace(/\n/g, " ")
+                                ),
                             }
                         )
                     );
@@ -55,6 +64,10 @@ const rule: TextlintRuleModule<Options> = (context) => {
                                     curr.range[0],
                                     curr.range[1],
                                 ]),
+                                fix: fixer.replaceTextRange(
+                                    [prev.range[1], curr.range[0]],
+                                    "\n"
+                                ),
                             }
                         )
                     );
@@ -62,6 +75,11 @@ const rule: TextlintRuleModule<Options> = (context) => {
             }
         },
     };
+};
+
+const rule: TextlintRuleModule<Options> = {
+    linter: reporter,
+    fixer: reporter,
 };
 
 export default rule;
