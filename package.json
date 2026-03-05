@@ -34,7 +34,7 @@
     "chai": "^6.2.2",
     "eslint": "^10.0.2",
     "mocha": "^11.0.0",
-    "textlint": "^14.0.0",
+    "textlint": "^15.0.0",
     "textlint-tester": "^14.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
