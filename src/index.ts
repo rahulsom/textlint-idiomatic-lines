@@ -9,12 +9,20 @@ const reporter: TextlintRuleModule<Options> = (context) => {
     return {
         [Syntax.Paragraph](node) {
             const originalText = getSource(node);
-            // Neutralize sentence-ending punctuation inside inline code spans so
-            // sentence-splitter does not treat e.g. `!command` as a sentence boundary.
+            // Neutralize sentence-ending punctuation inside inline code spans and
+            // image references so sentence-splitter does not treat e.g. `!command`
+            // or `![alt](./path/file.png)` as sentence boundaries.
+            // Also collapse newlines before image references so image-only lines
+            // don't cause false "sentence spans multiple lines" errors.
             // Character-for-character replacement preserves all range/position offsets.
-            const text = originalText.replace(/`([^`]*)`/g, (_, content) =>
-                '`' + content.replace(/[.!?]/g, "x") + '`'
-            );
+            const text = originalText
+                .replace(/\n(?=!\[)/g, " ")
+                .replace(/`([^`]*)`/g, (_, content) =>
+                    '`' + content.replace(/[.!?]/g, "x") + '`'
+                )
+                .replace(/!\[[^\]]*\]\([^)]*\)/g, (match) =>
+                    match.replace(/[.!?]/g, "x")
+                );
             const result = split(text);
 
             const sentences = result.filter(

@@ -314,6 +314,17 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for a paragraph followed by image references", async () => {
+        const text = [
+            "Here is an example of a passing check:",
+            "![Passing Check](./image/mergey/passing-check.png)",
+            "![Passing Check Code](./image/mergey/passing-check-code.png)",
+        ].join("\n");
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",
