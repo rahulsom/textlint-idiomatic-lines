@@ -20,7 +20,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: ./npmw install
+        run: ./npmw ci
 
       - name: Build
         run: ./npmw run build
@@ -29,4 +29,4 @@ jobs:
         run: ./npmw test
 
       - name: Publish
-        run: ./npmw publish --tag
+        run: ./npmw publish --tag latest
