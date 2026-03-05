@@ -29,6 +29,4 @@ jobs:
         run: ./npmw test
 
       - name: Publish
-        run: ./npmw publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: ./npmw publish --tag
