@@ -4,6 +4,10 @@
   "description": "textlint rule that enforces one sentence per line and one line per sentence",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahulsom/textlint-rule-idiomatic-lines"
+  },
   "files": [
     "lib",
     "src"
