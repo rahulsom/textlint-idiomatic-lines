@@ -31,6 +31,12 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 .replace(/\b(e\.g|i\.e|etc|vs|cf|al)\./gi, (m) =>
                     m.replace(/\./g, "x")
                 )
+                // Neutralise periods inside quoted strings that appear
+                // mid-sentence (closing " not at end of line) so they
+                // don't become false boundaries when quotes are removed.
+                .replace(/"[^"\n]*"(?!\s*$)/gm, (match) =>
+                    match.replace(/[.!?]/g, "x")
+                )
                 // sentence-splitter suppresses sentence boundaries inside
                 // double quotes, parentheses, and underscore emphasis;
                 // neutralise them so enclosed periods are still recognised

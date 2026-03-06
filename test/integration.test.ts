@@ -434,6 +434,14 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for a sentence with a quoted string inside italic parenthetical", async () => {
+        const text =
+            'You may also see the following warning (_"This commit does not belong to any branch on this repository, and may belong to a fork outside of the repository."_) when viewing the commit directly in the GitHub UI:';
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",
