@@ -325,6 +325,35 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for ordered list items containing code fences", async () => {
+        const text = [
+            "1.  Run",
+            "    ```shell",
+            "    metatron refresh -f",
+            "    ```",
+            "1.  If not already there, add the following to your `~/.gitconfig` (the paths to your `sslCert` and `sslKey` **must** be absolute for Git LFS):",
+            "",
+            "    **Mac**",
+            "    ```",
+            '    [http "https://stash.prod.netflix.net:7006"]',
+            "        sslCert = /Users/<YOUR_USER_NAME>/.metatron/certificates/user.crt",
+            "        sslKey = /Users/<YOUR_USER_NAME>/.metatron/certificates/user.key",
+            "        sslVerify = true",
+            "    ```",
+            "    **Windows**",
+            "    ```",
+            '    [http "https://stash.prod.netflix.net:7006"]',
+            "        sslCert = C:\\\\Users\\\\<YOUR_USER_NAME>\\\\.metatron\\\\certificates\\\\user.crt",
+            "        sslKey = C:\\\\Users\\\\<YOUR_USER_NAME>\\\\.metatron\\\\certificates\\\\user.key",
+            "        sslVerify = true",
+            "    ```",
+            "1. Retry the Git command that was failing",
+        ].join("\n");
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",
