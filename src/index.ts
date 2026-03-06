@@ -29,7 +29,11 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 // sentence-splitter treats periods after digits as decimals;
                 // replace the digit before a sentence-ending period with a
                 // letter so the splitter recognises the boundary.
-                .replace(/(\d)\.(\s+[A-Z])/g, "X.$2");
+                .replace(/(\d)\.(\s+[A-Z])/g, "X.$2")
+                // Treat a trailing colon at end-of-line as a sentence
+                // boundary so lines like "such as:" are not merged with
+                // the following line.
+                .replace(/:$/gm, ".");
             const result = split(text);
 
             const sentences = result.filter(
@@ -40,12 +44,18 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 return;
             }
 
+            const listItemPattern = /^\s*[*+-] /;
+
             for (const sentence of sentences) {
                 if (sentence.loc.start.line !== sentence.loc.end.line) {
                     const sentenceText = originalText.slice(
                         sentence.range[0],
                         sentence.range[1]
                     );
+                    const lines = sentenceText.split("\n");
+                    if (lines.every((l) => listItemPattern.test(l))) {
+                        continue;
+                    }
                     report(
                         node,
                         new RuleError(
