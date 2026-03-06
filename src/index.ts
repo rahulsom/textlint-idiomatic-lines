@@ -23,6 +23,9 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 .replace(/!\[[^\]]*\]\([^)]*\)/g, (match) =>
                     match.replace(/[.!?]/g, "x")
                 )
+                .replace(/(\*{1,2})([^*]+)\1/g, (match, _stars, content) =>
+                    match.replace(content, content.replace(/[.!?]/g, "x"))
+                )
                 // sentence-splitter treats periods after digits as decimals;
                 // replace the digit before a sentence-ending period with a
                 // letter so the splitter recognises the boundary.
