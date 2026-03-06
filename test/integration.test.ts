@@ -364,6 +364,18 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for a list item with bold label and indented paragraph", async () => {
+        const text = [
+            "* **Why?**",
+            "",
+            "    GitHub's approach to merging Pull Requests differs from Bitbucket's capabilities.",
+            "    GHES branch protection rules require a specific, named status check to enable auto-merge, while BB requires a simple status check count to enable auto-merge.",
+        ].join("\n");
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",
