@@ -354,6 +354,16 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for a sentence ending with a colon followed by a label", async () => {
+        const text = [
+            "Additionally, the Git Proxy UI redirect will not work on port 7004.",
+            "For example:",
+        ].join("\n");
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",
