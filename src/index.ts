@@ -26,6 +26,11 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 .replace(/(\*{1,2})([^*]+)\1/g, (match, _stars, content) =>
                     match.replace(content, content.replace(/[.!?]/g, "x"))
                 )
+                // Neutralise periods in common abbreviations so they
+                // survive the parentheses removal below.
+                .replace(/\b(e\.g|i\.e|etc|vs|cf|al)\./gi, (m) =>
+                    m.replace(/\./g, "x")
+                )
                 // sentence-splitter suppresses sentence boundaries inside
                 // double quotes, parentheses, and underscore emphasis;
                 // neutralise them so enclosed periods are still recognised
