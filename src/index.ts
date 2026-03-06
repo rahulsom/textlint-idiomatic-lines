@@ -20,7 +20,7 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 .replace(/`([^`]*)`/g, (_, content) =>
                     '`' + content.replace(/[.!?]/g, "x") + '`'
                 )
-                .replace(/!\[[^\]]*\]\([^)]*\)/g, (match) =>
+                .replace(/!?\[[^\]]*\]\([^)]*\)/g, (match) =>
                     match.replace(/[.!?]/g, "x")
                 )
                 .replace(/(\*{1,2})([^*]+)\1/g, (match, _stars, content) =>

@@ -414,6 +414,14 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for a sentence ending with a markdown link containing a query string", async () => {
+        const text =
+            "If you have feedback, please reach out to us at [#engineering-help](https://chat.example.com/app_redirect?channel=engineering-help).";
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",
