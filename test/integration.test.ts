@@ -392,6 +392,17 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for sentences containing quoted text with periods", async () => {
+        const text = [
+            "Yes, the storage backend was moved to NFS on October 2, 2021.",
+            'This date is significant because it provides a reference point for noting in the documentation that "Image attachments in PRs before X were not migrated."',
+            "The alignment of this date with entries in the `bb_attachments` table helps to confirm the timeframe for the migration of image attachments.",
+        ].join("\n");
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",

@@ -26,6 +26,10 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 .replace(/(\*{1,2})([^*]+)\1/g, (match, _stars, content) =>
                     match.replace(content, content.replace(/[.!?]/g, "x"))
                 )
+                // sentence-splitter suppresses sentence boundaries inside
+                // double quotes; neutralise them so quoted periods like
+                // "were not migrated." are still recognised.
+                .replace(/"/g, " ")
                 // sentence-splitter treats periods after digits as decimals;
                 // replace the digit before a sentence-ending period with a
                 // letter so the splitter recognises the boundary.
