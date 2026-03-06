@@ -317,8 +317,8 @@ describe("integration: lintText", () => {
     it("produces no errors for a paragraph followed by image references", async () => {
         const text = [
             "Here is an example of a passing check:",
-            "![Passing Check](./image/mergey/passing-check.png)",
-            "![Passing Check Code](./image/mergey/passing-check-code.png)",
+            "![Passing Check](./image/ci/passing-check.png)",
+            "![Passing Check Code](./image/ci/passing-check-code.png)",
         ].join("\n");
 
         const result = await linter.lintText(text, "test.md");
@@ -417,6 +417,18 @@ describe("integration: lintText", () => {
     it("produces no errors for a sentence ending with a markdown link containing a query string", async () => {
         const text =
             "If you have feedback, please reach out to us at [#engineering-help](https://chat.example.com/app_redirect?channel=engineering-help).";
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
+    it("produces no errors for nested list items with abbreviations in parentheses", async () => {
+        const text = [
+            "### `identity`",
+            "- <b>Purpose</b>: SSO sign-in",
+            "  - Gets the extension's redirect URL for the OAuth flow",
+            "  - Opens the auth provider (e.g. Okta) in a popup and returns the redirect URL with additional auth codes/params",
+        ].join("\n");
 
         const result = await linter.lintText(text, "test.md");
         expect(result.messages).to.be.empty;
