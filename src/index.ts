@@ -27,9 +27,13 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                     match.replace(content, content.replace(/[.!?]/g, "x"))
                 )
                 // sentence-splitter suppresses sentence boundaries inside
-                // double quotes; neutralise them so quoted periods like
-                // "were not migrated." are still recognised.
+                // double quotes, parentheses, and underscore emphasis;
+                // neutralise them so enclosed periods are still recognised
+                // as boundaries. Only replace _ at word boundaries to
+                // preserve underscores in identifiers like bb_attachments.
                 .replace(/"/g, " ")
+                .replace(/[()]/g, " ")
+                .replace(/(?<=\s|^)_|_(?=\s|$)/gm, " ")
                 // sentence-splitter treats periods after digits as decimals;
                 // replace the digit before a sentence-ending period with a
                 // letter so the splitter recognises the boundary.

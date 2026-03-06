@@ -403,6 +403,17 @@ describe("integration: lintText", () => {
         expect(result.messages).to.be.empty;
     });
 
+    it("produces no errors for a list item with italic parenthetical and bold label across lines", async () => {
+        const text = [
+            "1. **You must use the [Git Proxy](../concepts/proxy.md) locally:** If you've [installed or updated the cert tool](https://docs.example.com/cert-tool/user-guide/) since December 2023, your local `~/.gitconfig` is already set up to use the proxy.",
+            "  _(If you're unsure, simply remove the `~/.pki` directory and reinstall.)_",
+            "  **Pro Tip:** If you haven't already, we suggest running `cert-tool enroll` to enroll your device to automatically and continuously get fresh credentials.",
+        ].join("\n");
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
     it("handles multiple paragraphs where only some are invalid", async () => {
         const text = [
             "This paragraph is fine.",
