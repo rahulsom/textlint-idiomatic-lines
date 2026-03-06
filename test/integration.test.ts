@@ -329,22 +329,22 @@ describe("integration: lintText", () => {
         const text = [
             "1.  Run",
             "    ```shell",
-            "    metatron refresh -f",
+            "    cert-tool refresh -f",
             "    ```",
             "1.  If not already there, add the following to your `~/.gitconfig` (the paths to your `sslCert` and `sslKey` **must** be absolute for Git LFS):",
             "",
             "    **Mac**",
             "    ```",
-            '    [http "https://stash.prod.netflix.net:7006"]',
-            "        sslCert = /Users/<YOUR_USER_NAME>/.metatron/certificates/user.crt",
-            "        sslKey = /Users/<YOUR_USER_NAME>/.metatron/certificates/user.key",
+            '    [http "https://git.example.com:7006"]',
+            "        sslCert = /Users/<YOUR_USER_NAME>/.pki/certificates/user.crt",
+            "        sslKey = /Users/<YOUR_USER_NAME>/.pki/certificates/user.key",
             "        sslVerify = true",
             "    ```",
             "    **Windows**",
             "    ```",
-            '    [http "https://stash.prod.netflix.net:7006"]',
-            "        sslCert = C:\\\\Users\\\\<YOUR_USER_NAME>\\\\.metatron\\\\certificates\\\\user.crt",
-            "        sslKey = C:\\\\Users\\\\<YOUR_USER_NAME>\\\\.metatron\\\\certificates\\\\user.key",
+            '    [http "https://git.example.com:7006"]',
+            "        sslCert = C:\\\\Users\\\\<YOUR_USER_NAME>\\\\.pki\\\\certificates\\\\user.crt",
+            "        sslKey = C:\\\\Users\\\\<YOUR_USER_NAME>\\\\.pki\\\\certificates\\\\user.key",
             "        sslVerify = true",
             "    ```",
             "1. Retry the Git command that was failing",
@@ -356,7 +356,7 @@ describe("integration: lintText", () => {
 
     it("produces no errors for a sentence ending with a colon followed by a label", async () => {
         const text = [
-            "Additionally, the Git Proxy UI redirect will not work on port 7004.",
+            "Additionally, the reverse proxy redirect will not work on port 7004.",
             "For example:",
         ].join("\n");
 
@@ -370,6 +370,22 @@ describe("integration: lintText", () => {
             "",
             "    GitHub's approach to merging Pull Requests differs from Bitbucket's capabilities.",
             "    GHES branch protection rules require a specific, named status check to enable auto-merge, while BB requires a simple status check count to enable auto-merge.",
+        ].join("\n");
+
+        const result = await linter.lintText(text, "test.md");
+        expect(result.messages).to.be.empty;
+    });
+
+    it("produces no errors for a list item with inline code, colon, and nested sub-list", async () => {
+        const text = [
+            "2. `ghe-migrator audit --guid <guid> [--model-names <model-names>] `:",
+            "This step emits comma-separated values for each of the models specified, or all of them if empty.",
+            "We invoke this step to act as the basis for modifying some of the values, such as:",
+            "    * Collapsing all repos into 1 GH org (`corp`)",
+            "    * Renaming the repo to prevent naming collisions (`$BB_PROJECT-$BB_REPO`)",
+            "    * Creating users and teams in GHES (doing it here prevents a race condition if it is done during the `ghe-migrator import` step).",
+            "",
+            "    Typical model-names include: `user`,`organization`,`repository`,`team`",
         ].join("\n");
 
         const result = await linter.lintText(text, "test.md");
