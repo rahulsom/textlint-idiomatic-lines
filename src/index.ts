@@ -28,13 +28,17 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 )
                 // Neutralise periods in common abbreviations so they
                 // survive the parentheses removal below.
-                .replace(/\b(e\.g|i\.e|etc|vs|cf|al)\./gi, (m) =>
+                .replace(/\b(e\.g|i\.e|etc|vs|cf|al|Mr|Ms|Mrs|Dr|Prof|Sr|Jr|St|Co|Corp|Inc)\./gi, (m) =>
                     m.replace(/\./g, "x")
                 )
                 // Neutralise periods inside quoted strings that appear
-                // mid-sentence (closing " not at end of line) so they
-                // don't become false boundaries when quotes are removed.
-                .replace(/"[^"\n]*"(?!\s*$)/gm, (match) =>
+                // mid-sentence (closing quote not at end of line and not
+                // followed by a new sentence) so they don't become false
+                // boundaries when quotes are removed.
+                .replace(/"[^"\n]*"(?!\s*($|[A-Z]))/gm, (match) =>
+                    match.replace(/[.!?]/g, "x")
+                )
+                .replace(/'[^'\n]*'(?!\s*($|[A-Z]))/gm, (match) =>
                     match.replace(/[.!?]/g, "x")
                 )
                 // sentence-splitter suppresses sentence boundaries inside
@@ -43,6 +47,7 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 // as boundaries. Only replace _ at word boundaries to
                 // preserve underscores in identifiers like bb_attachments.
                 .replace(/"/g, " ")
+                .replace(/'/g, " ")
                 .replace(/[()]/g, " ")
                 .replace(/(?<=\s|^)_|_(?=\s|$)/gm, " ")
                 // sentence-splitter treats periods after digits as decimals;
@@ -52,7 +57,14 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 // Treat a trailing colon at end-of-line as a sentence
                 // boundary so lines like "such as:" are not merged with
                 // the following line.
-                .replace(/:$/gm, ".");
+                .replace(/:$/gm, ".")
+                // Ensure a boundary is recognised when terminal punctuation
+                // is followed immediately by a capital letter without a space.
+                // Replace the capital letter with a newline to force a split
+                // while preserving character count/offsets.
+                .replace(/([.!?])([A-Z])/g, "$1\n")
+                // Similarly for boundaries inside quotes or parentheses.
+                .replace(/([.!?]["')\]])([A-Z])/g, "$1\n");
             const result = split(text);
 
             const sentences = result.filter(
@@ -98,7 +110,9 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 const prev = sentences[i - 1];
                 const curr = sentences[i];
 
-                if (curr.loc.start.line === prev.loc.end.line) {
+                const between = originalText.slice(prev.range[1], curr.range[0]);
+                if (!between.includes("\n")) {
+                    const fixText = between.includes(' ') ? between.replace(/ +/, '\n') : '\n' + between;
                     report(
                         node,
                         new RuleError(
@@ -110,7 +124,7 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                                 ]),
                                 fix: fixer.replaceTextRange(
                                     [prev.range[1], curr.range[0]],
-                                    "\n"
+                                    fixText
                                 ),
                             }
                         )
