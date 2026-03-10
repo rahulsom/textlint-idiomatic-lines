@@ -28,13 +28,14 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 )
                 // Neutralise periods in common abbreviations so they
                 // survive the parentheses removal below.
-                .replace(/\b(e\.g|i\.e|etc|vs|cf|al)\./gi, (m) =>
-                    m.replace(/\./g, "x")
+                .replace(
+                    /\b(e\.g|i\.e|etc|vs|cf|al|mr|mrs|ms|dr|prof|st|ave|rd|inc|co|ltd)\./gi,
+                    (m) => m.replace(/\./g, "x")
                 )
                 // Neutralise periods inside quoted strings that appear
-                // mid-sentence (closing " not at end of line) so they
+                // mid-sentence (closing " or ' not at end of line) so they
                 // don't become false boundaries when quotes are removed.
-                .replace(/"[^"\n]*"(?!\s*$)/gm, (match) =>
+                .replace(/(["'])[^"'\n]*\1(?!\s*$)/gm, (match) =>
                     match.replace(/[.!?]/g, "x")
                 )
                 // sentence-splitter suppresses sentence boundaries inside
@@ -42,7 +43,7 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 // neutralise them so enclosed periods are still recognised
                 // as boundaries. Only replace _ at word boundaries to
                 // preserve underscores in identifiers like bb_attachments.
-                .replace(/"/g, " ")
+                .replace(/["']/g, " ")
                 .replace(/[()]/g, " ")
                 .replace(/(?<=\s|^)_|_(?=\s|$)/gm, " ")
                 // sentence-splitter treats periods after digits as decimals;
@@ -99,6 +100,10 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 const curr = sentences[i];
 
                 if (curr.loc.start.line === prev.loc.end.line) {
+                    const padding = originalText.slice(
+                        prev.range[1],
+                        curr.range[0]
+                    );
                     report(
                         node,
                         new RuleError(
@@ -110,7 +115,7 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                                 ]),
                                 fix: fixer.replaceTextRange(
                                     [prev.range[1], curr.range[0]],
-                                    "\n"
+                                    "\n" + padding.trim()
                                 ),
                             }
                         )
