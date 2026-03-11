@@ -26,9 +26,12 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 .replace(/(\*{1,2})([^*]+)\1/g, (match, _stars, content) =>
                     match.replace(content, content.replace(/[.!?]/g, "x"))
                 )
-                // Neutralise periods in common abbreviations so they
-                // survive the parentheses removal below.
-                .replace(/\b(e\.g|i\.e|etc|vs|cf|al|Mr|Ms|Mrs|Dr|Prof|Sr|Jr|St|Co|Corp|Inc)\./gi, (m) =>
+                // Neutralise periods in common abbreviations
+                .replace(/\b(etc|vs|cf|al|Mr|Ms|Mrs|Dr|Prof|Sr|Jr|St|Co|Corp|Inc|Ph\.D|vol|chap|pp)\./gi, (m) =>
+                    m.replace(/\./g, "x")
+                )
+                // Handle multi-period abbreviations like U.S.A. or i.e. or a.m.
+                .replace(/\b([a-z]\.([a-z]\.)+)/gi, (m) =>
                     m.replace(/\./g, "x")
                 )
                 // Neutralise periods inside quoted strings that appear
@@ -60,8 +63,8 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 .replace(/:$/gm, ".")
                 // Ensure a boundary is recognised when terminal punctuation
                 // is followed immediately by a capital letter without a space.
-                // Replace the capital letter with a newline to force a split
-                // while preserving character count/offsets.
+                // Replace the first character of the next sentence with a newline
+                // to force a split while preserving string length and character offsets.
                 .replace(/([.!?])([A-Z])/g, "$1\n")
                 // Similarly for boundaries inside quotes or parentheses.
                 .replace(/([.!?]["')\]])([A-Z])/g, "$1\n");
