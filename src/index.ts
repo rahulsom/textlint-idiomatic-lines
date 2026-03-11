@@ -1,123 +1,106 @@
 import { TextlintRuleModule } from "@textlint/types";
 import { split, SentenceSplitterSyntax } from "sentence-splitter";
 
-export type Options = Record<string, never>;
+export type Options = {
+    [key: string]: any;
+};
 
 const reporter: TextlintRuleModule<Options> = (context) => {
     const { Syntax, report, RuleError, locator, getSource, fixer } = context;
 
+    const abbreviations = new Set([
+        "dr", "mr", "mrs", "ms", "prof", "sr", "jr",
+        "eg", "ie", "etc", "vs", "cf", "al", "ph.d",
+        "e.g", "i.e", "u.s", "u.s.a"
+    ]);
+
+    const isAbbreviation = (text: string) => {
+        const match = text.match(/\b([a-z][a-z.]*)\.?$/i);
+        if (!match) return false;
+        const word = match[1].toLowerCase().replace(/\.$/, "");
+        return abbreviations.has(word) || word.length === 1;
+    };
+
     return {
         [Syntax.Paragraph](node) {
             const originalText = getSource(node);
-            // Neutralize sentence-ending punctuation inside inline code spans and
-            // image references so sentence-splitter does not treat e.g. `!command`
-            // or `![alt](./path/file.png)` as sentence boundaries.
-            // Also collapse newlines before image references so image-only lines
-            // don't cause false "sentence spans multiple lines" errors.
-            // Character-for-character replacement preserves all range/position offsets.
-            const text = originalText
-                .replace(/\n(?=!\[)/g, " ")
-                .replace(/`([^`]*)`/g, (_, content) =>
-                    '`' + content.replace(/[.!?]/g, "x") + '`'
-                )
-                .replace(/!?\[[^\]]*\]\([^)]*\)/g, (match) =>
-                    match.replace(/[.!?]/g, "x")
-                )
-                .replace(/(\*{1,2})([^*]+)\1/g, (match, _stars, content) =>
-                    match.replace(content, content.replace(/[.!?]/g, "x"))
-                )
-                // Neutralise periods in common abbreviations so they
-                // survive the parentheses removal below.
-                .replace(/\b(e\.g|i\.e|etc|vs|cf|al)\./gi, (m) =>
-                    m.replace(/\./g, "x")
-                )
-                // Neutralise periods inside quoted strings that appear
-                // mid-sentence (closing " not at end of line) so they
-                // don't become false boundaries when quotes are removed.
-                .replace(/"[^"\n]*"(?!\s*$)/gm, (match) =>
-                    match.replace(/[.!?]/g, "x")
-                )
-                // sentence-splitter suppresses sentence boundaries inside
-                // double quotes, parentheses, and underscore emphasis;
-                // neutralise them so enclosed periods are still recognised
-                // as boundaries. Only replace _ at word boundaries to
-                // preserve underscores in identifiers like bb_attachments.
-                .replace(/"/g, " ")
-                .replace(/[()]/g, " ")
-                .replace(/(?<=\s|^)_|_(?=\s|$)/gm, " ")
-                // sentence-splitter treats periods after digits as decimals;
-                // replace the digit before a sentence-ending period with a
-                // letter so the splitter recognises the boundary.
-                .replace(/(\d)\.(\s+[A-Z])/g, "X.$2")
-                // Treat a trailing colon at end-of-line as a sentence
-                // boundary so lines like "such as:" are not merged with
-                // the following line.
-                .replace(/:$/gm, ".");
-            const result = split(text);
 
-            const sentences = result.filter(
-                (child) => child.type === SentenceSplitterSyntax.Sentence
-            );
+            const neutralizedText = originalText
+                .replace(/`[^`]*`/g, (m) => " ".repeat(m.length))
+                .replace(/!\[[^\]]*\]\([^)]*\)/g, (m) => " ".repeat(m.length))
+                .replace(/\[[^\]]*\]\([^)]*\)/g, (m) => " ".repeat(m.length));
 
-            if (sentences.length === 0) {
-                return;
-            }
+            const sentences = split(neutralizedText).filter(s => s.type === SentenceSplitterSyntax.Sentence);
 
-            const listItemPattern = /^\s*[*+-] /;
+            for (let i = 0; i < sentences.length; i++) {
+                const s = sentences[i];
+                const sText = originalText.slice(s.range[0], s.range[1]);
 
-            for (const sentence of sentences) {
-                if (sentence.loc.start.line !== sentence.loc.end.line) {
-                    const sentenceText = originalText.slice(
-                        sentence.range[0],
-                        sentence.range[1]
-                    );
-                    const lines = sentenceText.split("\n");
-                    if (lines.every((l) => listItemPattern.test(l))) {
-                        continue;
+                // 1. Spanning check
+                if (sText.includes("\n")) {
+                    const lines = sText.split("\n");
+                    let isViolation = false;
+                    for (let j = 0; j < lines.length - 1; j++) {
+                        const line = lines[j].trim();
+                        if (line === "") continue;
+                        if (/[.!?]["')\]_*]*$/.test(line) || line.endsWith(":")) {
+                             if (line.endsWith(".") && isAbbreviation(line)) {
+                                 isViolation = true;
+                                 break;
+                             }
+                             continue;
+                        }
+                        const nextLine = lines[j+1].trim();
+                        if (/^(!\[|\[|[*+-]\s+|\d+\.\s+|<|<b>)/.test(nextLine)) continue;
+                        isViolation = true;
+                        break;
                     }
-                    report(
-                        node,
-                        new RuleError(
-                            "A sentence should not span multiple lines. Keep each sentence on a single line.",
-                            {
-                                padding: locator.range([
-                                    sentence.range[0],
-                                    sentence.range[1],
-                                ]),
-                                fix: fixer.replaceTextRange(
-                                    [sentence.range[0], sentence.range[1]],
-                                    sentenceText.replace(/\n/g, " ")
-                                ),
-                            }
-                        )
-                    );
+                    if (isViolation) {
+                        report(node, new RuleError("A sentence should not span multiple lines. Keep each sentence on a single line.", {
+                            padding: locator.range([s.range[0], s.range[1]]),
+                            fix: fixer.replaceTextRange([s.range[0], s.range[1]], sText.replace(/\n/g, " "))
+                        }));
+                    }
+                }
+
+                // 2. Multiple sentences on one line (between split sentences)
+                if (i > 0) {
+                    const prev = sentences[i-1];
+                    const between = originalText.slice(prev.range[1], s.range[0]);
+                    if (!between.includes("\n")) {
+                        // Skip if the "between" text is just Markdown markers like "**" that sentence-splitter over-split
+                        if (originalText.slice(prev.range[1], s.range[1]).trim() === "**") {
+                             // This is likely just closing bold markers
+                        } else {
+                            report(node, new RuleError("There should be only one sentence per line. Start a new line after each sentence.", {
+                                padding: locator.range([s.range[0], s.range[1]]),
+                                fix: fixer.replaceTextRange([prev.range[1], s.range[0]], "\n")
+                            }));
+                        }
+                    }
+                }
+
+                // 3. Mid-line violations within a single "sentence"
+                const boundaryRegex = /([.!?]["')\]_*]*)(\s+)([A-Z0-9("])/g;
+                let match;
+                while ((match = boundaryRegex.exec(sText)) !== null) {
+                    const punctuation = match[1];
+                    const whitespace = match[2];
+                    if (whitespace.includes("\n")) continue;
+
+                    const before = sText.slice(0, match.index + punctuation.length);
+                    if (punctuation.includes(".") && isAbbreviation(before)) continue;
+
+                    const beforeText = sText.slice(0, match.index);
+                    if ((beforeText.split("*").length - 1) % 2 !== 0 || (beforeText.split("_").length - 1) % 2 !== 0) continue;
+
+                    report(node, new RuleError("There should be only one sentence per line. Start a new line after each sentence.", {
+                        padding: locator.range([s.range[0] + match.index + punctuation.length + whitespace.length, s.range[1]]),
+                        fix: fixer.replaceTextRange([s.range[0] + match.index + punctuation.length, s.range[0] + match.index + punctuation.length + whitespace.length], "\n")
+                    }));
                 }
             }
-
-            for (let i = 1; i < sentences.length; i++) {
-                const prev = sentences[i - 1];
-                const curr = sentences[i];
-
-                if (curr.loc.start.line === prev.loc.end.line) {
-                    report(
-                        node,
-                        new RuleError(
-                            "There should be only one sentence per line. Start a new line after each sentence.",
-                            {
-                                padding: locator.range([
-                                    curr.range[0],
-                                    curr.range[1],
-                                ]),
-                                fix: fixer.replaceTextRange(
-                                    [prev.range[1], curr.range[0]],
-                                    "\n"
-                                ),
-                            }
-                        )
-                    );
-                }
-            }
-        },
+        }
     };
 };
 
