@@ -27,7 +27,7 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                     match.replace(content, content.replace(/[.!?]/g, "x"))
                 )
                 // Neutralise periods in common abbreviations
-                .replace(/\b(etc|vs|cf|al|Mr|Ms|Mrs|Dr|Prof|Sr|Jr|St|Co|Corp|Inc|Ph\.D|vol|chap|pp)\./gi, (m) =>
+                .replace(/\b(etc|vs|cf|al|Mr|Ms|Mrs|Dr|Prof|Sr|Jr|St|Co|Corp|Inc|Ph\.D|vol|chap|pp|Ltd|Gen|Rep|Sen|Rev|Ave|Rd|Univ|no|ed)\./gi, (m) =>
                     m.replace(/\./g, "x")
                 )
                 // Handle multi-period abbreviations like U.S.A. or i.e. or a.m.
@@ -38,10 +38,13 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 // mid-sentence (closing quote not at end of line and not
                 // followed by a new sentence) so they don't become false
                 // boundaries when quotes are removed.
-                .replace(/"[^"\n]*"(?!\s*($|[A-Z]))/gm, (match) =>
+                .replace(/"[^"\n]*"(?!\s*($|[A-Z]|_|`|\*))/gm, (match) =>
                     match.replace(/[.!?]/g, "x")
                 )
-                .replace(/'[^'\n]*'(?!\s*($|[A-Z]))/gm, (match) =>
+                .replace(/'[^'\n]*'(?!\s*($|[A-Z]|_|`|\*))/gm, (match) =>
+                    match.replace(/[.!?]/g, "x")
+                )
+                .replace(/\([^)\n]*\)(?!\s*($|[A-Z]|_|`|\*))/gm, (match) =>
                     match.replace(/[.!?]/g, "x")
                 )
                 // sentence-splitter suppresses sentence boundaries inside
@@ -57,6 +60,19 @@ const reporter: TextlintRuleModule<Options> = (context) => {
                 // replace the digit before a sentence-ending period with a
                 // letter so the splitter recognises the boundary.
                 .replace(/(\d)\.(\s+[A-Z])/g, "X.$2")
+                // Neutralise punctuation in plain URLs.
+                .replace(/https?:\/\/[^\s]+/g, (match, offset, fullText) => {
+                    const after = fullText.slice(offset + match.length);
+                    if (/^\s+[A-Z]/.test(after)) {
+                        const punctuationMatch = match.match(/[.!?]+$/);
+                        if (punctuationMatch) {
+                            const main = match.slice(0, -punctuationMatch[0].length);
+                            const trailing = punctuationMatch[0];
+                            return main.replace(/[.!?]/g, "x") + trailing;
+                        }
+                    }
+                    return match.replace(/[.!?]/g, "x");
+                })
                 // Treat a trailing colon at end-of-line as a sentence
                 // boundary so lines like "such as:" are not merged with
                 // the following line.
