@@ -41,6 +41,6 @@
     "textlint": "^15.0.0",
     "textlint-tester": "^15.0.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.0"
   }
 }
