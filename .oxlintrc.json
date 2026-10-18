@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true
+  },
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "typescript/no-deprecated": "error"
+  },
+  "overrides": [
+    {
+      "files": ["test/**/*.ts"],
+      "rules": {
+        "no-unused-expressions": "off"
+      }
+    }
+  ],
+  "env": {
+    "builtin": true
+  }
+}
